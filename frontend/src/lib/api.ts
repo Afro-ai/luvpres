@@ -25,8 +25,7 @@ export const api = {
     }
   },
 
-  async publish(data: { html: string; title: string }) {
-    // Publish endpoint isn't fully implemented in worker yet, mock for now if it fails
+  async publish(data: { html: string; title: string; theme?: string }): Promise<{ success: boolean; id: string; url: string; expiresAt: number }> {
     try {
       const res = await fetch(`${API_BASE}/publish`, {
         method: 'POST',
@@ -35,18 +34,14 @@ export const api = {
       });
 
       if (!res.ok) {
-        if (res.status === 404) {
-          console.warn('Publish endpoint not found, simulating success');
-          return { url: '#', id: 'mock-id' };
-        }
         const error = await res.json();
-        throw new Error(error.message || 'Publish failed');
+        throw new Error(error.error || 'Publish failed');
       }
 
       return res.json();
     } catch (err) {
-      console.warn('Publish failed, simulating success for demo', err);
-      return { url: '#', id: 'mock-id' };
+      console.error('Publish failed:', err);
+      throw err;
     }
   }
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Sparkles, ArrowLeft, Globe, Loader, Palette } from 'lucide-react';
+import { Sparkles, ArrowLeft, Globe, Loader, Palette, Copy, Check, ExternalLink } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { api } from '../lib/api';
 
@@ -26,11 +26,13 @@ const Step = ({ children, active, done }: { children: React.ReactNode, active?: 
 
 export function CreatePage() {
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<'input' | 'generating' | 'preview'>('input');
+  const [step, setStep] = useState<'input' | 'generating' | 'preview' | 'publishing' | 'published'>('input');
   const [topic, setTopic] = useState(searchParams.get('topic') || '');
   const [content, setContent] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('nobel');
   const [level, setLevel] = useState('intermediate');
+  const [publishedUrl, setPublishedUrl] = useState('');
+  const [copied, setCopied] = useState(false);
   const [generatedHtml, setGeneratedHtml] = useState('');
   const [error, setError] = useState('');
 
@@ -74,12 +76,21 @@ export function CreatePage() {
   };
 
   const handlePublish = async () => {
+    setStep('publishing');
     try {
-      await api.publish({ html: generatedHtml, title: topic });
-      alert('Published! (Mock)');
+      const result = await api.publish({ html: generatedHtml, title: topic, theme: selectedTheme });
+      setPublishedUrl(result.url);
+      setStep('published');
     } catch (err) {
-      alert('Failed to publish');
+      setError('Failed to publish. Please try again.');
+      setStep('preview');
     }
+  };
+
+  const copyUrl = () => {
+    navigator.clipboard.writeText(publishedUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -222,6 +233,92 @@ export function CreatePage() {
                 title="Dashboard Preview"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
+            </div>
+          </div>
+        )}
+
+        {step === 'publishing' && (
+          <div className="create-publishing" style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
+            <Loader className="w-16 h-16 spin" style={{ color: 'var(--gold)', margin: '0 auto 2rem' }} />
+            <h2>Publishing your dashboard...</h2>
+            <p style={{ color: 'var(--stone-500)' }}>Creating shareable link</p>
+          </div>
+        )}
+
+        {step === 'published' && (
+          <div className="create-published" style={{ textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'var(--success)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 2rem',
+              color: 'white',
+              fontSize: '2rem'
+            }}>
+              ✓
+            </div>
+
+            <h2 style={{ marginBottom: '0.5rem' }}>Dashboard Published! 🎉</h2>
+            <p style={{ color: 'var(--stone-500)', marginBottom: '2rem' }}>
+              Share this link with your audience. Expires in 7 days.
+            </p>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'var(--stone-100)',
+              padding: '1rem',
+              borderRadius: '8px',
+              marginBottom: '2rem'
+            }}>
+              <input
+                type="text"
+                value={publishedUrl}
+                readOnly
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '1rem',
+                  fontFamily: 'monospace'
+                }}
+              />
+              <button
+                className="btn btn--outline"
+                onClick={copyUrl}
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? ' Copied!' : ' Copy'}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <a
+                href={publishedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn--primary"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" /> Open Dashboard
+              </a>
+              <button
+                className="btn btn--outline"
+                onClick={() => {
+                  setStep('input');
+                  setTopic('');
+                  setContent('');
+                  setGeneratedHtml('');
+                  setPublishedUrl('');
+                }}
+              >
+                Create Another
+              </button>
             </div>
           </div>
         )}

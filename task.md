@@ -19,7 +19,7 @@
 - [x] Gemini client (`gemini-client.ts`)
 - [x] Prompt builder (`prompt-builder.ts`)
 - [x] HTML cleaner (`html-cleaner.ts`)
-- [ ] Theme loader with 6 themes (Nobel, Midnight, Ocean, Forest, Sunset, Aurora)
+- [x] Theme loader with 6 themes (Nobel, Midnight, Ocean, Forest, Sunset, Aurora)
 - [ ] Validation for required dashboard components
 - [ ] Metadata extraction
 
