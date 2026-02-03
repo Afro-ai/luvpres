@@ -1,0 +1,60 @@
+name = "love-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ============================================================
+# IMPORTANT: Replace placeholder IDs with your Cloudflare IDs
+# Run these commands to create resources:
+#   wrangler kv:namespace create "love-data"
+#   wrangler r2 bucket create love-dashboards
+# ============================================================
+
+# KV Namespaces
+[[kv_namespaces]]
+binding = "KV"
+id = "d8439b29bab44747b952737cc5867798"
+preview_id = "8d6f497f303b4537a9213fabd4863160"
+
+# R2 Bucket
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "love-dashboards"
+preview_bucket_name = "love-dashboards-preview"
+
+# Durable Objects (for Pointer - Phase 2)
+# Uncomment when implementing live presenter mode
+# [[durable_objects.bindings]]
+# name = "POINTER"
+# class_name = "PointerSession"
+
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["PointerSession"]
+
+# ============================================================
+# Development Environment (default)
+# ============================================================
+[vars]
+ENVIRONMENT = "development"
+CORS_ORIGIN = "http://localhost:5173"
+JWT_EXPIRY = "7d"
+
+# ============================================================
+# Production Environment
+# ============================================================
+[env.production]
+routes = [
+  { pattern = "api.bankruptthebc.online/*", zone_name = "bankruptthebc.online" }
+]
+
+[env.production.vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://bankruptthebc.online"
+JWT_EXPIRY = "7d"
+
+# Secrets (set via CLI, never commit these!):
+#   wrangler secret put JWT_SECRET
+#   wrangler secret put GEMINI_KEY
+#   wrangler secret put STRIPE_SECRET_KEY       # Phase 4
+#   wrangler secret put STRIPE_WEBHOOK_SECRET   # Phase 4
