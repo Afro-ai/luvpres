@@ -23,13 +23,14 @@ bucket_name = "love-dashboards"
 preview_bucket_name = "love-dashboards-preview"
 
 # Durable Objects for Live Presenter Mode
-[[durable_objects.bindings]]
-name = "POINTER"
-class_name = "PointerSession"
+# NOTE: Commented out - we now use PeerJS (P2P, no server needed)
+# [[durable_objects.bindings]]
+# name = "POINTER"
+# class_name = "PointerSession"
 
-[[migrations]]
-tag = "v1"
-new_classes = ["PointerSession"]
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["PointerSession"]
 
 # ============================================================
 # Development Environment (default)

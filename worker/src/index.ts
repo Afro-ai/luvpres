@@ -1,11 +1,12 @@
 import { handleGenerate } from './handlers/generate';
 import { handlePublish, handleGetDashboard, handleGetDashboardMeta } from './handlers/publish';
-import {
-  handleCreatePointerSession,
-  handleGetPointerSession,
-  handleGetPointerDashboard,
-  handlePointerWebSocket
-} from './handlers/pointer';
+// Pointer handlers commented out - we now use PeerJS (P2P, no server needed)
+// import {
+//   handleCreatePointerSession,
+//   handleGetPointerSession,
+//   handleGetPointerDashboard,
+//   handlePointerWebSocket
+// } from './handlers/pointer';
 import {
   handleAdminLogin,
   handleAdminVerify,
@@ -16,13 +17,13 @@ import {
   handleAdminUpdateSettings
 } from './handlers/admin';
 
-// Re-export Durable Object
-export { PointerSession } from './durable-objects/PointerSession';
+// Durable Objects commented out - we now use PeerJS (P2P, no server needed)
+// export { PointerSession } from './durable-objects/PointerSession';
 
 export interface Env {
   KV: KVNamespace;
   R2: R2Bucket;
-  POINTER: DurableObjectNamespace;
+  // POINTER: DurableObjectNamespace; // Not needed with PeerJS
   ENVIRONMENT: string;
   CORS_ORIGIN: string;
 }
