@@ -346,6 +346,101 @@ function SettingsPanel({ token, apiBase }: { token: string; apiBase: string }) {
         <div style={{ maxWidth: '600px' }}>
             <h2 style={{ color: 'white', marginBottom: '1.5rem' }}>System Settings</h2>
 
+            {/* AI Provider Section */}
+            <div style={{ marginBottom: '2rem', padding: '1rem', background: '#1a1a2a', borderRadius: '12px', border: '1px solid #3a3a5a' }}>
+                <h3 style={{ color: '#C5A059', marginBottom: '1rem', fontSize: '1rem' }}>🤖 AI Provider</h3>
+
+                <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', color: '#a0a0c0', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                        Provider
+                    </label>
+                    <select
+                        value={settings.aiProvider || 'gemini'}
+                        onChange={(e) => setSettings({ ...settings, aiProvider: e.target.value })}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            background: '#252542',
+                            border: '1px solid #3a3a5a',
+                            borderRadius: '8px',
+                            color: 'white',
+                            fontSize: '1rem'
+                        }}
+                    >
+                        <option value="gemini">Gemini (Default)</option>
+                        <option value="custom">Custom AI Endpoint</option>
+                    </select>
+                </div>
+
+                {settings.aiProvider === 'custom' && (
+                    <>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', color: '#a0a0c0', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                                Custom AI Base URL
+                            </label>
+                            <input
+                                type="text"
+                                value={settings.customAiUrl || ''}
+                                onChange={(e) => setSettings({ ...settings, customAiUrl: e.target.value })}
+                                placeholder="https://your-proxy.trycloudflare.com/v1beta/models"
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    background: '#252542',
+                                    border: '1px solid #3a3a5a',
+                                    borderRadius: '8px',
+                                    color: 'white',
+                                    fontSize: '1rem'
+                                }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', color: '#a0a0c0', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                                API Key
+                            </label>
+                            <input
+                                type="password"
+                                value={settings.customAiKey || ''}
+                                onChange={(e) => setSettings({ ...settings, customAiKey: e.target.value })}
+                                placeholder="sk-..."
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    background: '#252542',
+                                    border: '1px solid #3a3a5a',
+                                    borderRadius: '8px',
+                                    color: 'white',
+                                    fontSize: '1rem'
+                                }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '0.5rem' }}>
+                            <label style={{ display: 'block', color: '#a0a0c0', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                                Model
+                            </label>
+                            <input
+                                type="text"
+                                value={settings.customAiModel || ''}
+                                onChange={(e) => setSettings({ ...settings, customAiModel: e.target.value })}
+                                placeholder="gemini-3-flash"
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    background: '#252542',
+                                    border: '1px solid #3a3a5a',
+                                    borderRadius: '8px',
+                                    color: 'white',
+                                    fontSize: '1rem'
+                                }}
+                            />
+                            <p style={{ color: '#78716c', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                                Uses Gemini API format: {'{baseUrl}/{model}:generateContent'}
+                            </p>
+                        </div>
+                    </>
+                )}
+            </div>
+
             <SettingRow label="Dashboard Expiry (days)" keyName="dashboardExpiryDays" type="number" />
             <SettingRow label="Max Dashboards per User" keyName="maxDashboardsPerUser" type="number" />
             <SettingRow label="CORS Origin" keyName="corsOrigin" />

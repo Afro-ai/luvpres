@@ -1,5 +1,5 @@
 import { Env } from '../index';
-import { generateDashboard } from '../generator';
+import { generateDashboard, AISettings } from '../generator';
 
 export async function handleGenerate(request: Request, env: Env): Promise<Response> {
   try {
@@ -10,12 +10,30 @@ export async function handleGenerate(request: Request, env: Env): Promise<Respon
       return Response.json({ error: 'Topic is required' }, { status: 400 });
     }
 
+    // Fetch AI settings from KV
+    let aiSettings: AISettings = {};
+    try {
+      const settingsJson = await env.KV.get('system:settings');
+      if (settingsJson) {
+        const settings = JSON.parse(settingsJson);
+        aiSettings = {
+          aiProvider: settings.aiProvider || 'gemini',
+          customAiUrl: settings.customAiUrl,
+          customAiKey: settings.customAiKey,
+          customAiModel: settings.customAiModel
+        };
+      }
+    } catch (e) {
+      console.error('Failed to fetch AI settings:', e);
+    }
+
     // Use the real generator
     const apiKey = (env as any).GEMINI_KEY || 'mock-key';
 
     const result = await generateDashboard(
       { topic, content, level, theme },
-      apiKey
+      apiKey,
+      aiSettings
     );
 
     // Track analytics (non-blocking)
@@ -26,7 +44,8 @@ export async function handleGenerate(request: Request, env: Env): Promise<Respon
         theme: theme || 'nobel',
         topic: topic.slice(0, 50),
         success: true,
-        hour: new Date().getUTCHours()
+        hour: new Date().getUTCHours(),
+        provider: result.metadata.provider
       }), { expirationTtl: 30 * 24 * 60 * 60 }); // 30 days
     } catch (e) {
       console.error('Analytics tracking failed:', e);
