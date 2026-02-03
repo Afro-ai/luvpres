@@ -3,7 +3,7 @@ const API_BASE = import.meta.env.DEV
   : 'https://love-api.tedguy280.workers.dev/api';
 
 export const api = {
-  async generate(data: { topic: string; content: string; level?: string }) {
+  async generate(data: { topic: string; content: string; level?: string; theme?: string }) {
     console.log('Calling API:', `${API_BASE}/generate`, data);
 
     try {

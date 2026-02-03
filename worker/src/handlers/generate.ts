@@ -4,7 +4,7 @@ import { generateDashboard } from '../generator';
 export async function handleGenerate(request: Request, env: Env): Promise<Response> {
   try {
     const body = await request.json() as any;
-    const { topic, content, level } = body;
+    const { topic, content, level, theme } = body;
 
     if (!topic) {
       return Response.json({ error: 'Topic is required' }, { status: 400 });
@@ -16,12 +16,12 @@ export async function handleGenerate(request: Request, env: Env): Promise<Respon
     const apiKey = (env as any).GEMINI_KEY || 'mock-key';
 
     const result = await generateDashboard(
-      { topic, content, level },
+      { topic, content, level, theme },
       apiKey
     );
 
     return Response.json(result);
-    
+
   } catch (e: any) {
     console.error('Generate Error:', e);
     return Response.json({ error: e.message || 'Generation failed' }, { status: 500 });
