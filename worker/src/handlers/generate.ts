@@ -11,14 +11,26 @@ export async function handleGenerate(request: Request, env: Env): Promise<Respon
     }
 
     // Use the real generator
-    // env.GEMINI_KEY should be set in wrangler.toml or via secrets
-    // For local dev without a key, the client will fall back to mock
     const apiKey = (env as any).GEMINI_KEY || 'mock-key';
 
     const result = await generateDashboard(
       { topic, content, level, theme },
       apiKey
     );
+
+    // Track analytics (non-blocking)
+    try {
+      const analyticsKey = `analytics:generate:${Date.now()}`;
+      await env.KV.put(analyticsKey, JSON.stringify({
+        timestamp: Date.now(),
+        theme: theme || 'nobel',
+        topic: topic.slice(0, 50),
+        success: true,
+        hour: new Date().getUTCHours()
+      }), { expirationTtl: 30 * 24 * 60 * 60 }); // 30 days
+    } catch (e) {
+      console.error('Analytics tracking failed:', e);
+    }
 
     return Response.json(result);
 

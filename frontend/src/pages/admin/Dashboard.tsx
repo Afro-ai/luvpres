@@ -1,6 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FileText, Trash2, LogOut, RefreshCw, Users } from 'lucide-react';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+);
 
 interface DashboardData {
     id: string;
@@ -15,13 +43,25 @@ interface Stats {
     storageKeys: number;
 }
 
+interface AnalyticsData {
+    period: string;
+    totalGenerates: number;
+    totalPublishes: number;
+    conversionRate: number;
+    successRate: number;
+    themeBreakdown: Record<string, number>;
+    hourlyActivity: number[];
+    dailyStats: Array<{ date: string; generates: number; publishes: number }>;
+}
+
 export function AdminDashboard() {
     const navigate = useNavigate();
     const [stats, setStats] = useState<Stats | null>(null);
     const [dashboards, setDashboards] = useState<DashboardData[]>([]);
+    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<'overview' | 'dashboards' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'dashboards' | 'settings'>('overview');
 
     const API_BASE = import.meta.env.DEV
         ? 'http://localhost:8787/api'
@@ -42,9 +82,10 @@ export function AdminDashboard() {
         try {
             const headers = { 'Authorization': `Bearer ${token}` };
 
-            const [statsRes, dashboardsRes] = await Promise.all([
+            const [statsRes, dashboardsRes, analyticsRes] = await Promise.all([
                 fetch(`${API_BASE}/admin/stats`, { headers }),
-                fetch(`${API_BASE}/admin/dashboards`, { headers })
+                fetch(`${API_BASE}/admin/dashboards`, { headers }),
+                fetch(`${API_BASE}/admin/analytics`, { headers })
             ]);
 
             if (!statsRes.ok || !dashboardsRes.ok) {
@@ -58,9 +99,11 @@ export function AdminDashboard() {
 
             const statsData = await statsRes.json();
             const dashboardsData = await dashboardsRes.json();
+            const analyticsData = analyticsRes.ok ? await analyticsRes.json() : null;
 
             setStats(statsData);
             setDashboards(dashboardsData.dashboards || []);
+            setAnalytics(analyticsData);
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -134,7 +177,7 @@ export function AdminDashboard() {
 
             {/* Tabs */}
             <nav style={{ display: 'flex', gap: '0.5rem', padding: '1rem 2rem', borderBottom: '1px solid #252542' }}>
-                {(['overview', 'dashboards', 'settings'] as const).map(tab => (
+                {(['overview', 'analytics', 'dashboards', 'settings'] as const).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -168,6 +211,10 @@ export function AdminDashboard() {
                                 <StatCard label="Active Sessions" value={stats.activeSessions} icon={Users} />
                                 <StatCard label="Storage Keys" value={stats.storageKeys} icon={LayoutDashboard} />
                             </div>
+                        )}
+
+                        {activeTab === 'analytics' && analytics && (
+                            <AnalyticsPanel analytics={analytics} />
                         )}
 
                         {activeTab === 'dashboards' && (
@@ -319,6 +366,136 @@ function SettingsPanel({ token, apiBase }: { token: string; apiBase: string }) {
             >
                 {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Settings'}
             </button>
+        </div>
+    );
+}
+
+// Analytics Panel component
+function AnalyticsPanel({ analytics }: { analytics: AnalyticsData }) {
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#a0a0c0' }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: '#a0a0c0' },
+                grid: { color: '#252542' }
+            },
+            y: {
+                ticks: { color: '#a0a0c0' },
+                grid: { color: '#252542' }
+            }
+        }
+    };
+
+    // Daily usage line chart data
+    const dailyData = {
+        labels: analytics.dailyStats.map(d => d.date.slice(5)), // MM-DD format
+        datasets: [
+            {
+                label: 'Generates',
+                data: analytics.dailyStats.map(d => d.generates),
+                borderColor: '#C5A059',
+                backgroundColor: 'rgba(197, 160, 89, 0.2)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Publishes',
+                data: analytics.dailyStats.map(d => d.publishes),
+                borderColor: '#00ff88',
+                backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    };
+
+    // Theme breakdown doughnut
+    const themeColors: Record<string, string> = {
+        nobel: '#C5A059',
+        midnight: '#3b82f6',
+        ocean: '#06b6d4',
+        forest: '#22c55e',
+        sunset: '#f97316',
+        aurora: '#a855f7'
+    };
+
+    const themeData = {
+        labels: Object.keys(analytics.themeBreakdown),
+        datasets: [{
+            data: Object.values(analytics.themeBreakdown),
+            backgroundColor: Object.keys(analytics.themeBreakdown).map(t => themeColors[t] || '#666'),
+            borderWidth: 0
+        }]
+    };
+
+    // Hourly activity bar chart
+    const hourlyData = {
+        labels: Array.from({ length: 24 }, (_, i) => `${i}h`),
+        datasets: [{
+            label: 'Activity',
+            data: analytics.hourlyActivity,
+            backgroundColor: '#C5A059',
+            borderRadius: 4
+        }]
+    };
+
+    return (
+        <div>
+            {/* Key Metrics */}
+            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+                <div style={{ background: '#252542', borderRadius: '12px', padding: '1.5rem', flex: 1, minWidth: '150px' }}>
+                    <div style={{ color: '#a0a0c0', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Generates</div>
+                    <div style={{ fontSize: '2rem', fontWeight: '600', color: 'white' }}>{analytics.totalGenerates}</div>
+                </div>
+                <div style={{ background: '#252542', borderRadius: '12px', padding: '1.5rem', flex: 1, minWidth: '150px' }}>
+                    <div style={{ color: '#a0a0c0', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Publishes</div>
+                    <div style={{ fontSize: '2rem', fontWeight: '600', color: '#00ff88' }}>{analytics.totalPublishes}</div>
+                </div>
+                <div style={{ background: '#252542', borderRadius: '12px', padding: '1.5rem', flex: 1, minWidth: '150px' }}>
+                    <div style={{ color: '#a0a0c0', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Conversion Rate</div>
+                    <div style={{ fontSize: '2rem', fontWeight: '600', color: '#C5A059' }}>{analytics.conversionRate}%</div>
+                </div>
+            </div>
+
+            {/* Charts Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                {/* Daily Usage Chart */}
+                <div style={{ background: '#252542', borderRadius: '12px', padding: '1.5rem' }}>
+                    <h3 style={{ color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>Daily Usage (7 Days)</h3>
+                    <div style={{ height: '250px' }}>
+                        <Line data={dailyData} options={chartOptions} />
+                    </div>
+                </div>
+
+                {/* Theme Breakdown */}
+                <div style={{ background: '#252542', borderRadius: '12px', padding: '1.5rem' }}>
+                    <h3 style={{ color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>Theme Popularity</h3>
+                    <div style={{ height: '250px', display: 'flex', justifyContent: 'center' }}>
+                        <Doughnut
+                            data={themeData}
+                            options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { position: 'right', labels: { color: '#a0a0c0' } } }
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Hourly Activity */}
+                <div style={{ background: '#252542', borderRadius: '12px', padding: '1.5rem', gridColumn: 'span 2' }}>
+                    <h3 style={{ color: 'white', marginBottom: '1rem', fontSize: '1rem' }}>Hourly Activity (UTC)</h3>
+                    <div style={{ height: '200px' }}>
+                        <Bar data={hourlyData} options={chartOptions} />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

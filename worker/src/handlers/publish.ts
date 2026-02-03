@@ -72,6 +72,19 @@ export async function handlePublish(request: Request, env: Env): Promise<Respons
         const baseUrl = 'https://luvpres.pages.dev';
         const url = `${baseUrl}/d/${id}`;
 
+        // Track analytics (non-blocking)
+        try {
+            const analyticsKey = `analytics:publish:${Date.now()}`;
+            await env.KV.put(analyticsKey, JSON.stringify({
+                timestamp: now,
+                dashboardId: id,
+                theme: theme || 'nobel',
+                hour: new Date().getUTCHours()
+            }), { expirationTtl: 30 * 24 * 60 * 60 }); // 30 days
+        } catch (e) {
+            console.error('Analytics tracking failed:', e);
+        }
+
         return Response.json({
             success: true,
             id,

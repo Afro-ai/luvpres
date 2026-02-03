@@ -14,7 +14,8 @@ import {
   handleAdminDashboards,
   handleAdminDeleteDashboard,
   handleAdminGetSettings,
-  handleAdminUpdateSettings
+  handleAdminUpdateSettings,
+  handleAdminAnalytics
 } from './handlers/admin';
 
 // Durable Objects commented out - we now use PeerJS (P2P, no server needed)
@@ -155,6 +156,11 @@ export default {
         if (request.method === 'PUT') {
           return withCors(await handleAdminUpdateSettings(request, env));
         }
+      }
+
+      // Admin analytics
+      if (path === '/api/admin/analytics' && request.method === 'GET') {
+        return withCors(await handleAdminAnalytics(request, env));
       }
 
       return new Response(JSON.stringify({ error: 'not_found' }), {
