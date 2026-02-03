@@ -22,15 +22,14 @@ binding = "R2"
 bucket_name = "love-dashboards"
 preview_bucket_name = "love-dashboards-preview"
 
-# Durable Objects (for Pointer - Phase 2)
-# Uncomment when implementing live presenter mode
-# [[durable_objects.bindings]]
-# name = "POINTER"
-# class_name = "PointerSession"
+# Durable Objects for Live Presenter Mode
+[[durable_objects.bindings]]
+name = "POINTER"
+class_name = "PointerSession"
 
-# [[migrations]]
-# tag = "v1"
-# new_classes = ["PointerSession"]
+[[migrations]]
+tag = "v1"
+new_classes = ["PointerSession"]
 
 # ============================================================
 # Development Environment (default)

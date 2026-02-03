@@ -10,8 +10,8 @@
 - [x] Basic router (`/api/health`, `/api/generate`)
 - [x] CORS middleware
 - [ ] Add missing secrets to `Env` interface (JWT_SECRET, GEMINI_KEY, STRIPE_*)
-- [ ] Dashboard publish handler (`POST /api/publish`)
-- [ ] Dashboard retrieve handler (`GET /api/dashboard/:id`)
+- [x] Dashboard publish handler (`POST /api/publish`)
+- [x] Dashboard retrieve handler (`GET /d/:id`)
 - [ ] Rate limiting middleware
 - [ ] Error handling improvements
 
@@ -33,7 +33,7 @@
 - [x] Footer component (4-column layout)
 - [x] Testimonials section (3 cards with avatars)
 - [x] FAQ section (6 accordion items)
-- [ ] Preview/Publish flow completion
+- [x] Preview/Publish flow completion
 
 ### 4. Deployment Infrastructure
 - [x] Complete `wrangler.toml` with KV/R2 bindings

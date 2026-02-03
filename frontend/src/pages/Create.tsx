@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Sparkles, ArrowLeft, Globe, Loader, Palette, Copy, Check, ExternalLink } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Sparkles, ArrowLeft, Globe, Loader, Palette, Copy, Check, ExternalLink, Radio } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { api } from '../lib/api';
 
@@ -33,8 +33,10 @@ export function CreatePage() {
   const [level, setLevel] = useState('intermediate');
   const [publishedUrl, setPublishedUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [goingLive, setGoingLive] = useState(false);
   const [generatedHtml, setGeneratedHtml] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   // Progress simulation
   const [progressStep, setProgressStep] = useState(0);
@@ -85,6 +87,22 @@ export function CreatePage() {
       setError('Failed to publish. Please try again.');
       setStep('preview');
     }
+  };
+
+  const handleGoLive = () => {
+    if (!generatedHtml) return;
+    setGoingLive(true);
+
+    // Generate a client-side session ID for PeerJS
+    const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    let sessionId = '';
+    for (let i = 0; i < 6; i++) {
+      sessionId += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    // Navigate to presenter page with dashboard HTML encoded in URL
+    const encodedHtml = encodeURIComponent(generatedHtml);
+    navigate(`/present/${sessionId}?html=${encodedHtml}`);
   };
 
   const copyUrl = () => {
@@ -298,7 +316,7 @@ export function CreatePage() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <a
                 href={publishedUrl}
                 target="_blank"
@@ -307,6 +325,14 @@ export function CreatePage() {
               >
                 <ExternalLink className="w-4 h-4 mr-2" /> Open Dashboard
               </a>
+              <button
+                className="btn btn--outline"
+                onClick={handleGoLive}
+                disabled={goingLive}
+                style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', border: 'none', color: 'white' }}
+              >
+                <Radio className="w-4 h-4 mr-2" /> {goingLive ? 'Starting...' : 'Go Live'}
+              </button>
               <button
                 className="btn btn--outline"
                 onClick={() => {

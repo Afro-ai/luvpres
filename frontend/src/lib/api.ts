@@ -43,5 +43,25 @@ export const api = {
       console.error('Publish failed:', err);
       throw err;
     }
+  },
+
+  async createPointerSession(dashboardId: string): Promise<{ success: boolean; sessionId: string; presenterUrl: string; viewerUrl: string }> {
+    try {
+      const res = await fetch(`${API_BASE}/pointer/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dashboardId })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create session');
+      }
+
+      return res.json();
+    } catch (err) {
+      console.error('Create pointer session failed:', err);
+      throw err;
+    }
   }
 };
