@@ -1,59 +1,114 @@
-# LOVE Platform - System Prompts
+# LOVE Platform - Setup & Deployment Guide
 
-## Overview
+## Domain: teddie.qzz.io
 
-This folder contains detailed system prompts for building the LOVE (Learning Online Visualization Engine) SaaS platform. Each file guides a coding agent through a specific component with exhaustive detail.
+---
 
-## Architecture
+## 1. Cloudflare Account Setup
 
+### Worker Secrets
+Set these secrets in your Cloudflare Worker:
+
+```bash
+# Navigate to worker directory
+cd worker
+
+# Set Gemini API key (for AI generation)
+npx wrangler secret put GEMINI_KEY
+# Paste your key when prompted
+
+# Set Admin password (for /admin access)
+npx wrangler secret put ADMIN_PASSWORD
+# Choose a strong password
+
+# Set CORS origin (your frontend domain)
+npx wrangler secret put CORS_ORIGIN
+# Enter: https://teddie.qzz.io
 ```
-100% Cloudflare Free Tier
-├── Frontend: React + Vite → Cloudflare Pages
-├── API: Cloudflare Workers
-├── Database: Cloudflare KV
-├── Storage: Cloudflare R2
-└── Live Sync: Durable Objects
+
+### Environment Variables (wrangler.toml)
+These are already in `wrangler.toml`:
+```toml
+[vars]
+ENVIRONMENT = "production"
 ```
 
-## Files
+---
 
-| File | Component | Priority |
-|------|-----------|----------|
-| `01_LANDING_PAGE.md` | Marketing site + Create flow | P0 - Week 1 |
-| `02_DASHBOARD_GENERATOR.md` | AI generation engine | P0 - Week 1 |
-| `03_CLOUDFLARE_WORKER.md` | API backend | P0 - Week 1 |
-| `04_AUTH_SYSTEM.md` | User accounts | P1 - Week 2 |
-| `05_PAYMENT_STRIPE.md` | Monetization | P1 - Week 2 |
-| `06_POINTER_LIVE.md` | Live presenter mode | P2 - Week 3 |
-| `07_ANALYTICS.md` | Usage tracking | P2 - Week 3 |
-| `08_DEPLOYMENT.md` | CI/CD setup | P0 - Week 1 |
+## 2. Custom Domain Setup
 
-## How to Use
+### Frontend (Cloudflare Pages)
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Select your Pages project: `luvpres`
+3. Go to **Custom domains** → **Set up a custom domain**
+4. Enter: `teddie.qzz.io`
+5. Follow DNS verification steps
 
-1. Start with `08_DEPLOYMENT.md` to set up Cloudflare resources
-2. Then `03_CLOUDFLARE_WORKER.md` for the API foundation
-3. Then `01_LANDING_PAGE.md` + `02_DASHBOARD_GENERATOR.md` for MVP
-4. Layer on auth, payments, and advanced features
+### Worker API
+1. Go to your Worker: `love-api`
+2. Go to **Triggers** → **Custom Domains**
+3. Add: `api.teddie.qzz.io` (optional, or keep current URL)
 
-## Revenue Model
+---
 
-| Tier | Price | Features |
-|------|-------|----------|
-| Free | $0 | 3 dashboards, branded |
-| Pro | $9/mo | Unlimited, no branding, analytics |
-| Team | $29/mo | 5 seats, shared workspace |
-| Enterprise | $99/mo | White-label, API access |
+## 3. Update Frontend API Base
 
-## Target Market
+Edit `frontend/src/lib/api.ts` and admin pages:
+```typescript
+const API_BASE = import.meta.env.DEV 
+  ? 'http://localhost:8787/api' 
+  : 'https://love-api.tedguy280.workers.dev/api';
+```
 
-- Teachers & Educators
-- Corporate Trainers
-- Course Creators
-- Coaches & Consultants
-- Anyone who presents content
+---
 
-## Domain
+## 4. Required Secrets Summary
 
-- Main: `bankruptthebc.online`
-- Lessons: `lesson.bankruptthebc.online`  
-- App: `app.bankruptthebc.online`
+| Secret | Purpose | Where to Get |
+|--------|---------|-------------|
+| `GEMINI_KEY` | AI dashboard generation | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| `ADMIN_PASSWORD` | Admin panel access | Choose your own |
+| `CORS_ORIGIN` | Frontend domain | `https://teddie.qzz.io` |
+
+---
+
+## 5. Deploy Commands
+
+```bash
+# Deploy Worker (API)
+cd worker
+npx wrangler deploy
+
+# Deploy Frontend
+cd frontend
+npm run build
+npx wrangler pages deploy dist --project-name=luvpres
+```
+
+---
+
+## 6. Verify Deployment
+
+1. **Health check**: `https://love-api.tedguy280.workers.dev/api/health`
+2. **Frontend**: `https://teddie.qzz.io`
+3. **Admin**: `https://teddie.qzz.io/admin`
+
+---
+
+## Troubleshooting
+
+### "Admin not configured" error
+```bash
+npx wrangler secret put ADMIN_PASSWORD
+```
+
+### CORS errors
+```bash
+npx wrangler secret put CORS_ORIGIN
+# Enter: https://teddie.qzz.io
+```
+
+### Check secrets are set
+```bash
+npx wrangler secret list
+```
